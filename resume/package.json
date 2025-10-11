@@ -1,13 +1,33 @@
 {
-  "name": "resume",
-  "private": true,
-  "version": "0.0.0",
+  "name": "professional-ai-resume-builder",
+  "description": "Enterprise-grade AI-powered resume and cover letter builder with ATS optimization",
+  "version": "1.0.0",
+  "private": false,
+  "author": "Santosh Reddy <santoshreddy1362004@gmail.com>",
+  "license": "MIT",
+  "homepage": "https://ai-resume-builder-five-dusky.vercel.app/",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/santoshreddy-1362004/AiResumeBuilder.git"
+  },
+  "keywords": [
+    "resume-builder",
+    "ai-resume",
+    "cover-letter",
+    "ats-optimization",
+    "career-tools",
+    "job-application",
+    "react",
+    "vite",
+    "gemini-ai"
+  ],
   "type": "module",
   "scripts": {
     "dev": "vite",
     "build": "vite build",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "deploy": "npm run build && vercel --prod"
   },
   "dependencies": {
     "react": "^19.1.1",
