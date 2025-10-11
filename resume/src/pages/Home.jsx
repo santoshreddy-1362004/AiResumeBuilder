@@ -27,6 +27,12 @@ function Home(){
  async function handleGenerateData(){
     console.log("FormData",formData);
     
+    // Validation checks to prevent errors
+    if (!formData.companyName || !formData.jobDescription) {
+      alert('Please fill in Company Name and Job Description before generating.');
+      return;
+    }
+    
     // Check if API key is available
     const apiKey = import.meta.env.VITE_GEMINI_API_KEY || 'AIzaSyBycc2KKX_ueqc0fs1hroByuCjL4JM_g0M';
     
@@ -35,7 +41,10 @@ function Home(){
       return;
     }
 
-    const prompt=` You are a professional career coach and resume optimization expert. 
+    // Show loading state
+    setGeminiResponse("🔄 Generating your professional documents... Please wait.");
+
+    const prompt = ` You are a professional career coach and resume optimization expert. 
 Your task is to generate a personalized cover letter, improve the resume content, 
 and provide an ATS (Applicant Tracking System) analysis.
 
@@ -43,7 +52,7 @@ Inputs:
 Company Name: ${formData.companyName}
 Experience Level: ${formData.applyingAsA}  (Fresher / Experienced)
 Job Description: ${formData.jobDescription}
-Current Resume: ${formData.currentResume} (If empty, assume no resume exists and create a draft)
+Current Resume: ${formData.currentResume || 'No resume provided'} (If empty, assume no resume exists and create a draft)
 Preferred Tone: ${formData.coverLetterTone}
 
 Output (format clearly in sections):
@@ -69,6 +78,11 @@ Explain the reasoning briefly (e.g., missing keywords, formatting issues, irrele
 Ensure the response is structured, clear, and easy to display in a React app. `;
     
     const url = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent';
+    
+    // Enhanced request configuration with timeout and error handling
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 second timeout
+    
     const options = {
       method: 'POST',
       headers: {
@@ -81,25 +95,75 @@ Ensure the response is structured, clear, and easy to display in a React app. `;
             "text": prompt
           }]
         }]
-      })
+      }),
+      signal: controller.signal
     };
 
     try {
+      console.log('Making API request to Gemini...');
       const response = await fetch(url, options);
+      clearTimeout(timeoutId);
+      
       if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+        // Handle different HTTP status codes
+        switch (response.status) {
+          case 400:
+            throw new Error('Bad Request: Please check your input and try again.');
+          case 401:
+            throw new Error('Unauthorized: API key is invalid.');
+          case 403:
+            throw new Error('Forbidden: API quota exceeded or access denied.');
+          case 404:
+            throw new Error('Not Found: Gemini API endpoint not available.');
+          case 429:
+            throw new Error('Rate Limited: Too many requests. Please wait and try again.');
+          case 500:
+            throw new Error('Server Error: Gemini API is temporarily unavailable.');
+          default:
+            throw new Error(`HTTP ${response.status}: Request failed`);
+        }
       }
+      
       const data = await response.json();
       
-      if (data.candidates && data.candidates[0] && data.candidates[0].content && data.candidates[0].content.parts && data.candidates[0].content.parts[0]) {
-        console.log('gemini generated', data.candidates[0].content.parts[0].text);
-        setGeminiResponse(data.candidates[0].content.parts[0].text);
-      } else {
-        throw new Error('Invalid response format from Gemini API');
+      // Validate response structure
+      if (!data || !data.candidates || !Array.isArray(data.candidates) || data.candidates.length === 0) {
+        throw new Error('Invalid response format: No candidates found');
       }
+      
+      const candidate = data.candidates[0];
+      if (!candidate || !candidate.content || !candidate.content.parts || !Array.isArray(candidate.content.parts) || candidate.content.parts.length === 0) {
+        throw new Error('Invalid response format: No content found');
+      }
+      
+      const generatedText = candidate.content.parts[0].text;
+      if (!generatedText || typeof generatedText !== 'string') {
+        throw new Error('Invalid response format: No text content found');
+      }
+      
+      console.log('Successfully generated content');
+      setGeminiResponse(generatedText);
+      
     } catch (error) {
+      clearTimeout(timeoutId);
+      
+      // Handle different types of errors
+      let errorMessage = 'An unexpected error occurred. ';
+      
+      if (error.name === 'AbortError') {
+        errorMessage = 'Request timeout: The AI service took too long to respond. Please try again.';
+      } else if (error.message.includes('Failed to fetch') || error.message.includes('NetworkError')) {
+        errorMessage = 'Network Error: Please check your internet connection and try again.';
+      } else if (error.message.includes('API key')) {
+        errorMessage = 'API Key Error: ' + error.message;
+      } else if (error.message.includes('quota') || error.message.includes('Rate Limited')) {
+        errorMessage = 'Service Limit Reached: Please try again in a few minutes.';
+      } else {
+        errorMessage = error.message || 'Unknown error occurred.';
+      }
+      
       console.error('Error generating content:', error);
-      setGeminiResponse('Error: Unable to generate content. Please try again later.');
+      setGeminiResponse(`❌ Error: ${errorMessage}\n\nPlease try again or contact support if the problem persists.`);
     }
   }
 
