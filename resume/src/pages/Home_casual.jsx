@@ -26,15 +26,6 @@ function Home(){
 
  async function handleGenerateData(){
     console.log("FormData",formData);
-    
-    // Check if API key is available
-    const apiKey = import.meta.env.VITE_GEMINI_API_KEY || 'AIzaSyBycc2KKX_ueqc0fs1hroByuCjL4JM_g0M';
-    
-    if (!apiKey) {
-      alert('API key not configured. Please contact the administrator.');
-      return;
-    }
-
     const prompt=` You are a professional career coach and resume optimization expert. 
 Your task is to generate a personalized cover letter, improve the resume content, 
 and provide an ATS (Applicant Tracking System) analysis.
@@ -67,53 +58,37 @@ Provide a rough ATS match score for the current resume against the job descripti
 Explain the reasoning briefly (e.g., missing keywords, formatting issues, irrelevant content).  
 
 Ensure the response is structured, clear, and easy to display in a React app. `;
-    
     const url = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent';
-    const options = {
-      method: 'POST',
-      headers: {
-        'content-type': 'application/json',
-        'X-goog-api-key': apiKey
-      },
-      body: JSON.stringify({
-        "contents": [{
-          "parts": [{
-            "text": prompt
-          }]
-        }]
-      })
-    };
+const options = {
+  method: 'POST',
+  headers: {
+    'content-type': 'application/json',
+    'X-goog-api-key': 'AIzaSyBycc2KKX_ueqc0fs1hroByuCjL4JM_g0M'
+  },
+  body: `{"contents":[{"parts":[{"text":"${prompt}"}]}]}`
+};
 
-    try {
-      const response = await fetch(url, options);
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-      const data = await response.json();
-      
-      if (data.candidates && data.candidates[0] && data.candidates[0].content && data.candidates[0].content.parts && data.candidates[0].content.parts[0]) {
-        console.log('gemini generated', data.candidates[0].content.parts[0].text);
-        setGeminiResponse(data.candidates[0].content.parts[0].text);
-      } else {
-        throw new Error('Invalid response format from Gemini API');
-      }
-    } catch (error) {
-      console.error('Error generating content:', error);
-      setGeminiResponse('Error: Unable to generate content. Please try again later.');
-    }
+try {
+  const response = await fetch(url, options);
+  const data = await response.json();
+  console.log('gemini generated',data.candidates[0].content.parts[0].text);
+  setGeminiResponse(data.candidates[0].content.parts[0].text);
+} catch (error) {
+  console.error(error);
+}
   }
 
   const formatMarkdownText = (text) => {
     return text.split('\n').map((line, index) => {
       // Handle code blocks
       if (line.trim().startsWith('```') && line.trim().endsWith('```')) {
-        return null;
+        return null; // Skip code block markers
       }
       if (line.trim() === '```') {
-        return null;
+        return null; // Skip standalone code block markers
       }
       
-      // Handle main section headers
+      // Handle main section headers (starting with **)
       if (line.match(/^\*\*\d+\.\s.*\*\*$/)) {
         const cleanTitle = line.replace(/^\*\*|\*\*$/g, '');
         return (
@@ -132,7 +107,7 @@ Ensure the response is structured, clear, and easy to display in a React app. `;
         );
       }
       
-      // Handle subsection headers
+      // Handle subsection headers (starting with **)
       if (line.match(/^\*\*[a-zA-Z].*\*\*$/)) {
         const cleanTitle = line.replace(/^\*\*|\*\*$/g, '');
         return (
@@ -148,7 +123,7 @@ Ensure the response is structured, clear, and easy to display in a React app. `;
         );
       }
       
-      // Handle lettered subsections
+      // Handle lettered subsections (a), b), c))
       if (line.match(/^\*\*[a-z]\)\s.*\*\*$/)) {
         const cleanTitle = line.replace(/^\*\*|\*\*$/g, '');
         return (
@@ -193,7 +168,7 @@ Ensure the response is structured, clear, and easy to display in a React app. `;
         );
       }
       
-      // Handle regular paragraphs
+      // Handle regular paragraphs with bold text
       if (line.trim().length > 0) {
         const cleanText = line.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
         return (
@@ -207,6 +182,7 @@ Ensure the response is structured, clear, and easy to display in a React app. `;
         );
       }
       
+      // Empty lines for spacing
       return <br key={index} />;
     }).filter(element => element !== null);
   };
@@ -530,6 +506,8 @@ Ensure the response is structured, clear, and easy to display in a React app. `;
               </form>
             </section>
 
+            </section>
+
             {/* Results Section */}
             <section style={{
               backgroundColor: 'white',
@@ -580,7 +558,7 @@ Ensure the response is structured, clear, and easy to display in a React app. `;
                     justifyContent: 'center',
                     fontSize: '2rem'
                   }}>
-                    📊
+                    �
                   </div>
                   <h3 style={{
                     fontSize: '1.25rem',
