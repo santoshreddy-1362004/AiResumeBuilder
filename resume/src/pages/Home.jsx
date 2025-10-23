@@ -28,10 +28,10 @@ function Home(){
     console.log("FormData",formData);
     
     // Check if API key is available
-    const apiKey = import.meta.env.VITE_GEMINI_API_KEY || 'AIzaSyBycc2KKX_ueqc0fs1hroByuCjL4JM_g0M';
+    const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
     
     if (!apiKey) {
-      alert('API key not configured. Please contact the administrator.');
+      alert('API key not configured. Please set VITE_GEMINI_API_KEY environment variable.');
       return;
     }
 
