@@ -12,7 +12,6 @@ function Home(){
 
   const [geminiResponse,setGeminiResponse]=useState("");
   const [isMobile, setIsMobile] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
     const checkScreenSize = () => {
@@ -27,18 +26,6 @@ function Home(){
 
  async function handleGenerateData(){
     console.log("FormData",formData);
-    
-    // Check if API key is available
-    const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
-    
-    if (!apiKey) {
-      alert('API key not configured. Please set VITE_GEMINI_API_KEY environment variable.');
-      return;
-    }
-
-    setIsLoading(true);
-    setGeminiResponse("");
-
     const prompt=` You are a professional career coach and resume optimization expert. 
 Your task is to generate a personalized cover letter, improve the resume content, 
 and provide an ATS (Applicant Tracking System) analysis.
@@ -71,75 +58,37 @@ Provide a rough ATS match score for the current resume against the job descripti
 Explain the reasoning briefly (e.g., missing keywords, formatting issues, irrelevant content).  
 
 Ensure the response is structured, clear, and easy to display in a React app. `;
-    
     const url = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent';
-    const options = {
-      method: 'POST',
-      headers: {
-        'content-type': 'application/json',
-        'X-goog-api-key': apiKey
-      },
-      body: JSON.stringify({
-        "contents": [{
-          "parts": [{
-            "text": prompt
-          }]
-        }]
-      })
-    };
+const options = {
+  method: 'POST',
+  headers: {
+    'content-type': 'application/json',
+    'X-goog-api-key': import.meta.env.VITE_GEMINI_API_KEY
+  },
+  body: `{"contents":[{"parts":[{"text":"${prompt}"}]}]}`
+};
 
-    try {
-      const response = await fetch(url, options);
-      
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.error('API Error Response:', errorText);
-        throw new Error(`HTTP error! status: ${response.status} - ${errorText}`);
-      }
-      
-      const data = await response.json();
-      console.log('Full API Response:', data);
-      
-      if (data.error) {
-        console.error('Gemini API Error:', data.error);
-        setGeminiResponse(`Error: ${data.error.message || 'API returned an error'}`);
-        return;
-      }
-      
-      if (data.candidates && data.candidates[0] && data.candidates[0].content && data.candidates[0].content.parts && data.candidates[0].content.parts[0]) {
-        console.log('gemini generated', data.candidates[0].content.parts[0].text);
-        setGeminiResponse(data.candidates[0].content.parts[0].text);
-      } else {
-        console.error('Invalid response format:', data);
-        setGeminiResponse('Error: Invalid response format from Gemini API. Check console for details.');
-      }
-    } catch (error) {
-      console.error('Error generating content:', error);
-      if (error.message.includes('Failed to fetch')) {
-        setGeminiResponse('Error: Network error. Please check your internet connection and try again.');
-      } else if (error.message.includes('403')) {
-        setGeminiResponse('Error: API key is invalid or unauthorized. Please check your Gemini API key.');
-      } else if (error.message.includes('429')) {
-        setGeminiResponse('Error: Rate limit exceeded. Please wait a moment and try again.');
-      } else {
-        setGeminiResponse(`Error: ${error.message}`);
-      }
-    } finally {
-      setIsLoading(false);
-    }
+try {
+  const response = await fetch(url, options);
+  const data = await response.json();
+  console.log('gemini generated',data.candidates[0].content.parts[0].text);
+  setGeminiResponse(data.candidates[0].content.parts[0].text);
+} catch (error) {
+  console.error(error);
+}
   }
 
   const formatMarkdownText = (text) => {
     return text.split('\n').map((line, index) => {
       // Handle code blocks
       if (line.trim().startsWith('```') && line.trim().endsWith('```')) {
-        return null;
+        return null; // Skip code block markers
       }
       if (line.trim() === '```') {
-        return null;
+        return null; // Skip standalone code block markers
       }
       
-      // Handle main section headers
+      // Handle main section headers (starting with **)
       if (line.match(/^\*\*\d+\.\s.*\*\*$/)) {
         const cleanTitle = line.replace(/^\*\*|\*\*$/g, '');
         return (
@@ -158,7 +107,7 @@ Ensure the response is structured, clear, and easy to display in a React app. `;
         );
       }
       
-      // Handle subsection headers
+      // Handle subsection headers (starting with **)
       if (line.match(/^\*\*[a-zA-Z].*\*\*$/)) {
         const cleanTitle = line.replace(/^\*\*|\*\*$/g, '');
         return (
@@ -174,7 +123,7 @@ Ensure the response is structured, clear, and easy to display in a React app. `;
         );
       }
       
-      // Handle lettered subsections
+      // Handle lettered subsections (a), b), c))
       if (line.match(/^\*\*[a-z]\)\s.*\*\*$/)) {
         const cleanTitle = line.replace(/^\*\*|\*\*$/g, '');
         return (
@@ -219,7 +168,7 @@ Ensure the response is structured, clear, and easy to display in a React app. `;
         );
       }
       
-      // Handle regular paragraphs
+      // Handle regular paragraphs with bold text
       if (line.trim().length > 0) {
         const cleanText = line.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
         return (
@@ -233,6 +182,7 @@ Ensure the response is structured, clear, and easy to display in a React app. `;
         );
       }
       
+      // Empty lines for spacing
       return <br key={index} />;
     }).filter(element => element !== null);
   };
@@ -523,43 +473,39 @@ Ensure the response is structured, clear, and easy to display in a React app. `;
                   ></textarea>
                 </div>
 
-                                <button 
+                <button 
                   type="button" 
                   onClick={handleGenerateData}
-                  disabled={isLoading}
                   style={{
                     width: '100%',
                     padding: '14px 24px',
                     fontSize: '0.95rem',
                     fontWeight: '600',
                     color: 'white',
-                    backgroundColor: isLoading ? '#6b7280' : '#1f2937',
+                    backgroundColor: '#1f2937',
                     border: 'none',
                     borderRadius: '6px',
-                    cursor: isLoading ? 'not-allowed' : 'pointer',
+                    cursor: 'pointer',
                     transition: 'all 0.2s ease-in-out',
                     textTransform: 'uppercase',
-                    letterSpacing: '0.5px',
-                    opacity: isLoading ? 0.7 : 1
+                    letterSpacing: '0.05em'
                   }}
                   onMouseOver={(e) => {
-                    if (!isLoading) {
-                      e.target.style.backgroundColor = '#374151';
-                      e.target.style.transform = 'translateY(-1px)';
-                      e.target.style.boxShadow = '0 4px 12px rgba(0, 0, 0, 0.15)';
-                    }
+                    e.target.style.backgroundColor = '#111827';
+                    e.target.style.transform = 'translateY(-1px)';
+                    e.target.style.boxShadow = '0 4px 12px rgba(0, 0, 0, 0.15)';
                   }}
                   onMouseOut={(e) => {
-                    if (!isLoading) {
-                      e.target.style.backgroundColor = '#1f2937';
-                      e.target.style.transform = 'translateY(0)';
-                      e.target.style.boxShadow = 'none';
-                    }
+                    e.target.style.backgroundColor = '#1f2937';
+                    e.target.style.transform = 'translateY(0)';
+                    e.target.style.boxShadow = 'none';
                   }}
                 >
-                  {isLoading ? '🔄 Generating...' : 'Generate Professional Documents'}
+                  Generate Professional Documents
                 </button>
               </form>
+            </section>
+
             </section>
 
             {/* Results Section */}
@@ -612,7 +558,7 @@ Ensure the response is structured, clear, and easy to display in a React app. `;
                     justifyContent: 'center',
                     fontSize: '2rem'
                   }}>
-                    📊
+                    �
                   </div>
                   <h3 style={{
                     fontSize: '1.25rem',
