@@ -63,7 +63,7 @@ const options = {
   method: 'POST',
   headers: {
     'content-type': 'application/json',
-    'X-goog-api-key': import.meta.env.VITE_GEMINI_API_KEY
+    'X-goog-api-key': 'AIzaSyBycc2KKX_ueqc0fs1hroByuCjL4JM_g0M'
   },
   body: `{"contents":[{"parts":[{"text":"${prompt}"}]}]}`
 };

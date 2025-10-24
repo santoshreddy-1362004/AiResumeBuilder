@@ -12,7 +12,6 @@ function Home(){
 
   const [geminiResponse,setGeminiResponse]=useState("");
   const [isMobile, setIsMobile] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
     const checkScreenSize = () => {
@@ -29,15 +28,12 @@ function Home(){
     console.log("FormData",formData);
     
     // Check if API key is available
-    const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
+    const apiKey = import.meta.env.VITE_GEMINI_API_KEY || 'AIzaSyBycc2KKX_ueqc0fs1hroByuCjL4JM_g0M';
     
     if (!apiKey) {
-      alert('API key not configured. Please set VITE_GEMINI_API_KEY environment variable.');
+      alert('API key not configured. Please contact the administrator.');
       return;
     }
-
-    setIsLoading(true);
-    setGeminiResponse("");
 
     const prompt=` You are a professional career coach and resume optimization expert. 
 Your task is to generate a personalized cover letter, improve the resume content, 
@@ -90,42 +86,20 @@ Ensure the response is structured, clear, and easy to display in a React app. `;
 
     try {
       const response = await fetch(url, options);
-      
       if (!response.ok) {
-        const errorText = await response.text();
-        console.error('API Error Response:', errorText);
-        throw new Error(`HTTP error! status: ${response.status} - ${errorText}`);
+        throw new Error(`HTTP error! status: ${response.status}`);
       }
-      
       const data = await response.json();
-      console.log('Full API Response:', data);
-      
-      if (data.error) {
-        console.error('Gemini API Error:', data.error);
-        setGeminiResponse(`Error: ${data.error.message || 'API returned an error'}`);
-        return;
-      }
       
       if (data.candidates && data.candidates[0] && data.candidates[0].content && data.candidates[0].content.parts && data.candidates[0].content.parts[0]) {
         console.log('gemini generated', data.candidates[0].content.parts[0].text);
         setGeminiResponse(data.candidates[0].content.parts[0].text);
       } else {
-        console.error('Invalid response format:', data);
-        setGeminiResponse('Error: Invalid response format from Gemini API. Check console for details.');
+        throw new Error('Invalid response format from Gemini API');
       }
     } catch (error) {
       console.error('Error generating content:', error);
-      if (error.message.includes('Failed to fetch')) {
-        setGeminiResponse('Error: Network error. Please check your internet connection and try again.');
-      } else if (error.message.includes('403')) {
-        setGeminiResponse('Error: API key is invalid or unauthorized. Please check your Gemini API key.');
-      } else if (error.message.includes('429')) {
-        setGeminiResponse('Error: Rate limit exceeded. Please wait a moment and try again.');
-      } else {
-        setGeminiResponse(`Error: ${error.message}`);
-      }
-    } finally {
-      setIsLoading(false);
+      setGeminiResponse('Error: Unable to generate content. Please try again later.');
     }
   }
 
@@ -523,41 +497,35 @@ Ensure the response is structured, clear, and easy to display in a React app. `;
                   ></textarea>
                 </div>
 
-                                <button 
+                <button 
                   type="button" 
                   onClick={handleGenerateData}
-                  disabled={isLoading}
                   style={{
                     width: '100%',
                     padding: '14px 24px',
                     fontSize: '0.95rem',
                     fontWeight: '600',
                     color: 'white',
-                    backgroundColor: isLoading ? '#6b7280' : '#1f2937',
+                    backgroundColor: '#1f2937',
                     border: 'none',
                     borderRadius: '6px',
-                    cursor: isLoading ? 'not-allowed' : 'pointer',
+                    cursor: 'pointer',
                     transition: 'all 0.2s ease-in-out',
                     textTransform: 'uppercase',
-                    letterSpacing: '0.5px',
-                    opacity: isLoading ? 0.7 : 1
+                    letterSpacing: '0.05em'
                   }}
                   onMouseOver={(e) => {
-                    if (!isLoading) {
-                      e.target.style.backgroundColor = '#374151';
-                      e.target.style.transform = 'translateY(-1px)';
-                      e.target.style.boxShadow = '0 4px 12px rgba(0, 0, 0, 0.15)';
-                    }
+                    e.target.style.backgroundColor = '#111827';
+                    e.target.style.transform = 'translateY(-1px)';
+                    e.target.style.boxShadow = '0 4px 12px rgba(0, 0, 0, 0.15)';
                   }}
                   onMouseOut={(e) => {
-                    if (!isLoading) {
-                      e.target.style.backgroundColor = '#1f2937';
-                      e.target.style.transform = 'translateY(0)';
-                      e.target.style.boxShadow = 'none';
-                    }
+                    e.target.style.backgroundColor = '#1f2937';
+                    e.target.style.transform = 'translateY(0)';
+                    e.target.style.boxShadow = 'none';
                   }}
                 >
-                  {isLoading ? '🔄 Generating...' : 'Generate Professional Documents'}
+                  Generate Professional Documents
                 </button>
               </form>
             </section>
