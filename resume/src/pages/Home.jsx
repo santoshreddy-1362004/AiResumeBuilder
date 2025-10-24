@@ -27,15 +27,15 @@ function Home(){
  async function handleGenerateData(){
     console.log("FormData",formData);
     
-    // Check if API key is available
-    const apiKey = import.meta.env.VITE_GEMINI_API_KEY || 'AIzaSyBycc2KKX_ueqc0fs1hroByuCjL4JM_g0M';
+    // Check if API key is available - now using Groq API (free)
+    const apiKey = import.meta.env.VITE_GROQ_API_KEY;
     
     if (!apiKey) {
-      alert('API key not configured. Please contact the administrator.');
+      alert('API key not configured. Please add VITE_GROQ_API_KEY to your environment variables.');
       return;
     }
 
-    const prompt=` You are a professional career coach and resume optimization expert. 
+    const prompt=`You are a professional career coach and resume optimization expert. 
 Your task is to generate a personalized cover letter, improve the resume content, 
 and provide an ATS (Applicant Tracking System) analysis.
 
@@ -43,63 +43,71 @@ Inputs:
 Company Name: ${formData.companyName}
 Experience Level: ${formData.applyingAsA}  (Fresher / Experienced)
 Job Description: ${formData.jobDescription}
-Current Resume: ${formData.currentResume} (If empty, assume no resume exists and create a draft)
+Current Resume: ${formData.currentresume} (If empty, assume no resume exists and create a draft)
 Preferred Tone: ${formData.coverLetterTone}
 
 Output (format clearly in sections):
 
-1. Tailored Cover Letter  
+**1. Tailored Cover Letter**
 Write a professional cover letter addressed to ${formData.companyName}.  
 Use the specified tone: ${formData.coverLetterTone}.  
 Highlight relevant skills and experiences based on the job description.  
 
-2. Updated Resume Content  
-Suggest optimized resume summary, bullet points, and skills tailored to ${formData.jobDescription}.  
+**2. Updated Resume Content**
+Suggest optimized resume summary, bullet points, and skills tailored to the job description.  
 Ensure the content is concise, achievement-focused, and ATS-friendly.  
 
-3. Keyword Match Analysis  
+**3. Keyword Match Analysis**
 Extract the most important keywords from the job description.  
 Check if they exist in the provided resume (if given).  
 List missing keywords that should be added.  
 
-4. ATS Score Estimate (0–100)  
+**4. ATS Score Estimate (0–100)**
 Provide a rough ATS match score for the current resume against the job description.  
 Explain the reasoning briefly (e.g., missing keywords, formatting issues, irrelevant content).  
 
-Ensure the response is structured, clear, and easy to display in a React app. `;
+Ensure the response is structured, clear, and easy to display in a React app.`;
     
-    const url = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent';
+    // Using Groq API (free and fast alternative)
+    const url = 'https://api.groq.com/openai/v1/chat/completions';
     const options = {
       method: 'POST',
       headers: {
-        'content-type': 'application/json',
-        'X-goog-api-key': apiKey
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${apiKey}`
       },
       body: JSON.stringify({
-        "contents": [{
-          "parts": [{
-            "text": prompt
-          }]
-        }]
+        model: "llama-3.1-8b-instant", // Updated free model
+        messages: [
+          {
+            role: "user",
+            content: prompt
+          }
+        ],
+        temperature: 0.7,
+        max_tokens: 2000
       })
     };
 
     try {
+      setGeminiResponse('Generating your professional documents... Please wait.');
+      
       const response = await fetch(url, options);
       if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+        const errorData = await response.json();
+        throw new Error(`HTTP error! status: ${response.status}, message: ${errorData.error?.message || 'Unknown error'}`);
       }
       const data = await response.json();
       
-      if (data.candidates && data.candidates[0] && data.candidates[0].content && data.candidates[0].content.parts && data.candidates[0].content.parts[0]) {
-        console.log('gemini generated', data.candidates[0].content.parts[0].text);
-        setGeminiResponse(data.candidates[0].content.parts[0].text);
+      if (data.choices && data.choices[0] && data.choices[0].message && data.choices[0].message.content) {
+        console.log('AI generated', data.choices[0].message.content);
+        setGeminiResponse(data.choices[0].message.content);
       } else {
-        throw new Error('Invalid response format from Gemini API');
+        throw new Error('Invalid response format from AI API');
       }
     } catch (error) {
       console.error('Error generating content:', error);
-      setGeminiResponse('Error: Unable to generate content. Please try again later.');
+      setGeminiResponse(`Error: Unable to generate content. ${error.message}. Please try again later.`);
     }
   }
 
