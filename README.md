@@ -4,6 +4,7 @@
 [![License](https://img.shields.io/badge/License-MIT-green?style=for-the-badge)](LICENSE)
 [![React](https://img.shields.io/badge/React-19.1.1-blue?style=for-the-badge&logo=react)](https://reactjs.org/)
 [![Vite](https://img.shields.io/badge/Vite-7.1.7-purple?style=for-the-badge&logo=vite)](https://vitejs.dev/)
+[![Groq](https://img.shields.io/badge/Groq-API-orange?style=for-the-badge&logo=ai)](https://groq.com/)
 
 > **Enterprise-grade AI-powered resume and cover letter optimization platform with ATS compatibility analysis**
 
@@ -29,14 +30,15 @@
 
 ## 🎯 Overview
 
-The **Professional AI Resume Builder** is a cutting-edge web application that leverages artificial intelligence to create optimized resumes and cover letters. Built with modern React architecture and powered by Google's Gemini AI, this platform provides comprehensive career document optimization with real-time ATS (Applicant Tracking System) analysis.
+The **Professional AI Resume Builder** is a cutting-edge web application that leverages artificial intelligence to create optimized resumes and cover letters. Built with modern React architecture and powered by **Groq's Lightning-Fast AI**, this platform provides comprehensive career document optimization with real-time ATS (Applicant Tracking System) analysis.
 
 ### 🎪 **Key Highlights**
-- **AI-Powered Content Generation** using Google Gemini 2.0 Flash
-- **ATS Optimization** with keyword analysis and scoring
-- **Professional Corporate Design** with responsive layout
-- **Real-time Analysis** providing actionable insights
-- **Enterprise-Grade Security** with environment-based API management
+- **⚡ Lightning-Fast AI** powered by Groq's infrastructure with Llama 3.1 model
+- **🆓 Completely Free** - No API costs or usage limits
+- **🎯 ATS Optimization** with keyword analysis and scoring
+- **🎨 Professional Corporate Design** with responsive layout
+- **⚡ Real-time Analysis** providing actionable insights
+- **🔒 Enterprise-Grade Security** with environment-based API management
 
 ---
 
@@ -45,7 +47,7 @@ The **Professional AI Resume Builder** is a cutting-edge web application that le
 ### 🚀 **Core Functionality**
 | Feature | Description |
 |---------|-------------|
-| **AI Resume Optimization** | Intelligent content enhancement based on job descriptions |
+| **AI Resume Optimization** | Intelligent content enhancement using Llama 3.1-8B model |
 | **Cover Letter Generation** | Personalized cover letters with customizable tone |
 | **ATS Compatibility Analysis** | Real-time scoring and optimization suggestions |
 | **Keyword Matching** | Identify missing keywords and optimization opportunities |
@@ -61,10 +63,11 @@ The **Professional AI Resume Builder** is a cutting-edge web application that le
 
 ### 🔒 **Security & Performance**
 - **Environment Variable Management** for secure API handling
+- **GitHub Secret Scanning Compliant** - No hardcoded API keys
 - **Client-side Error Handling** with graceful degradation
 - **Optimized Bundle Size** with code splitting and lazy loading
 - **SEO Optimized** with meta tags and semantic HTML
-- **Fast Loading Times** with Vite build optimization
+- **Lightning-Fast Response Times** with Groq's optimized infrastructure
 
 ---
 
@@ -91,8 +94,10 @@ The **Professional AI Resume Builder** is a cutting-edge web application that le
 - ![JavaScript](https://img.shields.io/badge/JavaScript-ES6+-F7DF1E?logo=javascript&logoColor=black) **Modern JavaScript** - ES6+ features
 
 ### **AI & API**
-- ![Google](https://img.shields.io/badge/Google-Gemini%202.0-4285F4?logo=google&logoColor=white) **Gemini 2.0 Flash** - Advanced AI language model
+- ![Groq](https://img.shields.io/badge/Groq-Lightning%20Fast%20AI-FF6B35?logo=ai&logoColor=white) **Groq API** - Ultra-fast AI inference
+- ![Llama](https://img.shields.io/badge/Llama-3.1--8B--Instant-4B8BBE?logo=meta&logoColor=white) **Llama 3.1-8B** - Advanced language model
 - ![REST API](https://img.shields.io/badge/REST-API-FF6B6B) **REST API Integration** - Seamless data communication
+- ![Gemini](https://img.shields.io/badge/Gemini-2.0%20(Alternative)-4285F4?logo=google&logoColor=white) **Gemini Support** - Alternative AI provider
 
 ### **Deployment & DevOps**
 - ![Vercel](https://img.shields.io/badge/Vercel-000000?logo=vercel&logoColor=white) **Vercel** - Serverless deployment platform
@@ -105,7 +110,7 @@ The **Professional AI Resume Builder** is a cutting-edge web application that le
 
 ### **Prerequisites**
 - Node.js 18+ and npm
-- Google Gemini API key
+- Groq API key (free)
 - Modern web browser
 
 ### **Installation**
@@ -126,7 +131,12 @@ The **Professional AI Resume Builder** is a cutting-edge web application that le
    cp .env.example .env.local
    ```
    
-   Add your Gemini API key to `.env.local`:
+   Add your Groq API key to `.env.local`:
+   ```env
+   VITE_GROQ_API_KEY=your_groq_api_key_here
+   ```
+   
+   **Optional:** For Gemini API alternative:
    ```env
    VITE_GEMINI_API_KEY=your_gemini_api_key_here
    ```
@@ -161,8 +171,9 @@ npm run preview
    - Set the root directory to `resume`
 
 2. **Environment variables:**
-   - Add `VITE_GEMINI_API_KEY` in Vercel dashboard
-   - Get your API key from [Google AI Studio](https://makersuite.google.com/app/apikey)
+   - Add `VITE_GROQ_API_KEY` in Vercel dashboard
+   - Get your free API key from [Groq Console](https://console.groq.com/)
+   - Optional: Add `VITE_GEMINI_API_KEY` for alternative AI provider
 
 3. **Automatic deployment:**
    - Every push to main branch triggers deployment
@@ -177,29 +188,64 @@ npm run preview
 
 ## 🔗 API Integration
 
-### **Google Gemini AI Configuration**
+### **Groq AI Configuration (Primary)**
 
 ```javascript
 // Environment-based API configuration
+const apiKey = import.meta.env.VITE_GROQ_API_KEY;
+const apiUrl = 'https://api.groq.com/openai/v1/chat/completions';
+
+// Secure API call with error handling
+const response = await fetch(apiUrl, {
+  method: 'POST',
+  headers: {
+    'Content-Type': 'application/json',
+    'Authorization': `Bearer ${apiKey}`
+  },
+  body: JSON.stringify({
+    model: "llama-3.1-8b-instant",
+    messages: [{ role: "user", content: prompt }],
+    temperature: 0.7,
+    max_tokens: 2000
+  })
+});
+```
+
+### **Getting Your Free Groq API Key**
+1. Visit [Groq Console](https://console.groq.com/)
+2. Create a free account
+3. Generate an API key
+4. Add it to your environment variables
+
+### **Alternative: Google Gemini AI Configuration**
+
+```javascript
+// Fallback API configuration
 const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
 const apiUrl = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent';
 
-// Secure API call with error handling
+// Alternative API implementation
 const response = await fetch(apiUrl, {
   method: 'POST',
   headers: {
     'content-type': 'application/json',
     'X-goog-api-key': apiKey
   },
-  body: JSON.stringify(requestData)
+  body: JSON.stringify({
+    "contents": [{ "parts": [{ "text": prompt }] }]
+  })
 });
 ```
 
-### **Getting Your API Key**
-1. Visit [Google AI Studio](https://makersuite.google.com/app/apikey)
-2. Create a new project or select existing
-3. Generate an API key
-4. Add it to your environment variables
+### **API Comparison**
+
+| Feature | Groq API | Gemini API |
+|---------|----------|------------|
+| **Cost** | 🆓 Free | 💰 Quota Limited |
+| **Speed** | ⚡ Ultra Fast | 🐌 Moderate |
+| **Model** | Llama 3.1-8B | Gemini 2.0 Flash |
+| **Rate Limits** | Generous | Restrictive |
+| **Setup** | Simple | Complex |
 
 ---
 
@@ -261,10 +307,29 @@ MIT License - Feel free to use this project for personal and commercial purposes
 ## 🏆 Achievements
 
 - ✅ **Production Ready** - Deployed and accessible globally
-- ✅ **Mobile Optimized** - Responsive design for all devices
-- ✅ **AI Powered** - Advanced language model integration
-- ✅ **Security First** - Environment-based configuration
-- ✅ **Performance Optimized** - Fast loading and smooth UX
+- ✅ **Mobile Optimized** - Responsive design for all devices  
+- ✅ **AI Powered** - Advanced language model integration with dual API support
+- ✅ **Security First** - Environment-based configuration, GitHub compliant
+- ✅ **Performance Optimized** - Lightning-fast AI responses with Groq infrastructure
+- ✅ **Cost Effective** - Free AI API with no usage limitations
+- ✅ **Enterprise Grade** - Professional UI/UX design and robust error handling
+
+---
+
+## 🚀 Recent Updates
+
+### **v2.0.0 - Groq AI Integration** (Latest)
+- ⚡ **Lightning-Fast AI Responses** with Groq's optimized infrastructure
+- 🆓 **Completely Free** - No API costs or quota limitations
+- 🔒 **Enhanced Security** - Removed all hardcoded API keys, GitHub compliant
+- 🎯 **Improved UX** - Added loading states and better error messaging
+- 🔄 **Dual AI Support** - Both Groq and Gemini API compatibility
+- 📱 **Better Mobile Experience** - Enhanced responsive design
+
+### **Previous Versions**
+- **v1.2.0** - Professional UI redesign and corporate styling
+- **v1.1.0** - ATS optimization and keyword analysis features  
+- **v1.0.0** - Initial release with Gemini AI integration
 
 ---
 
